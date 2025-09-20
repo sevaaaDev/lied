@@ -47,7 +47,7 @@ func writeFile(filename string, buf [][]byte) {
 	}
 	for _, v := range buf {
 		file.Write(v)
-	file.Write([]byte{10})
+		file.Write([]byte{10})
 	}
 	file.Sync()
 }
@@ -60,10 +60,10 @@ func main() {
 	buf := readFile(os.Args[1])
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Split(bufio.ScanBytes)
-	index := 0
+	index := len(buf)
 	for {
 		var line []byte
-		fmt.Printf("  |")
+		fmt.Printf("%2d|", index+1)
 		for scanner.Scan() {
 			if scanner.Bytes()[0] == '\n' {
 				break
