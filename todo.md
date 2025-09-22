@@ -1,5 +1,6 @@
 - [x] struct for node
 - [x] parser recursive descent
 - [ ] eval for node
-- [ ] ctx
-- [ ] map of cmd
+- [x] ctx
+- [x] map of cmd
+- [ ] func cmd (print, del, write)
