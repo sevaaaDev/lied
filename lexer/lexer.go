@@ -14,6 +14,8 @@ type Token struct {
 const (
 	TokCmd TokenType = iota
 	TokDigits
+	TokComma
+	TokSymbol
 )
 
 func Tokenize(input []byte) []Token {

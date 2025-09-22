@@ -3,6 +3,9 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"lied/context"
+	"lied/lexer"
+	"lied/parser"
 	"os"
 	"slices"
 	"strconv"
@@ -57,35 +60,32 @@ func main() {
 		fmt.Println("need file")
 		os.Exit(1)
 	}
+	ctx := context.NewContext()
 	buf := readFile(os.Args[1])
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Split(bufio.ScanBytes)
-	index := len(buf)
+	ctx.Buffer = buf
+	ctx.CurrentLine = len(buf)
 	for {
 		var line []byte
-		fmt.Printf("%2d|", index+1)
+		fmt.Printf("%2d|", ctx.CurrentLine+1)
 		for scanner.Scan() {
 			if scanner.Bytes()[0] == '\n' {
 				break
 			}
 			line = append(line, scanner.Bytes()...)
 		}
-		linenum, err := parseCommand(line[1:])
-		if err != nil {
-			if string(line) == ":q" {
-				break
-			}
-			if string(line) == ":p" {
-				printBuf(buf)
-				continue
-			}
-		} else {
-			index = linenum
+		if line[0] != ':' {
+			ctx.Buffer = slices.Insert(ctx.Buffer, ctx.CurrentLine, line)
+			ctx.CurrentLine++
 			continue
 		}
-		buf = slices.Insert(buf, index, line)
-		index++
+		tokens := lexer.Tokenize(line[1:])
+		node, _ := parser.Parse(tokens)
+		err := node.Eval(ctx)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
 	}
-	printBuf(buf)
-	writeFile(os.Args[1], buf)
 }
