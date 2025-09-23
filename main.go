@@ -57,7 +57,7 @@ func writeFile(filename string, buf [][]byte) {
 
 func readline(scanner *bufio.Scanner, prompt string) []byte {
 	var line []byte
-	fmt.Printf(prompt)
+	fmt.Print(prompt)
 	for scanner.Scan() {
 		if scanner.Bytes()[0] == '\n' {
 			break

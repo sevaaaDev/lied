@@ -20,7 +20,7 @@ func TestTokenize(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
-		got := Tokenize(c.Input)
+		got, _ := Tokenize(c.Input)
 		assert.Equal(t, got, c.Want)
 	}
 }

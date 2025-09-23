@@ -96,12 +96,17 @@ func Parse(tokens []lexer.Token) (CommandNode, error) {
 	if errCmd == nil {
 		cmdNode.cmd = cmdType
 	}
+	if i <= len(tokens)-1 {
+		return cmdNode, fmt.Errorf("invalid syntax")
+	}
 	return cmdNode, nil
 }
 
 func parseLineRange(tokens []lexer.Token, i *int) (LineRange, error) {
 	start, errStart := parseLine(tokens, i)
-	if tokens[*i].Type != lexer.TokComma {
+	// if we have peek(), we can error in that func instead
+	// peek(lexer.TokenType) bool
+	if *i < len(tokens) && tokens[*i].Type != lexer.TokComma {
 		if errStart == nil {
 			return LineRange{start: start, end: start}, nil
 		}
