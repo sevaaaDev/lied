@@ -97,17 +97,17 @@ func Parse(tokens []lexer.Token) (CommandNode, error) {
 	lineRange, errLr := parseLineRange(tokens, &i)
 	cmdType, errCmd := parseCmdType(tokens, &i)
 	cmdNode := CommandNode{cmd: "set"}
+	if i <= len(tokens)-1 {
+		return cmdNode, fmt.Errorf("invalid syntax")
+	}
 	if errLr != nil && errCmd != nil {
-		return cmdNode, fmt.Errorf("Parser: nothing parsed")
+		return cmdNode, fmt.Errorf("nothing is parsed")
 	}
 	if errLr == nil {
 		cmdNode.lineRange = &lineRange
 	}
 	if errCmd == nil {
 		cmdNode.cmd = cmdType
-	}
-	if i <= len(tokens)-1 {
-		return cmdNode, fmt.Errorf("invalid syntax")
 	}
 	return cmdNode, nil
 }
@@ -129,7 +129,7 @@ func parseLineRange(tokens []lexer.Token, i *int) (LineRange, error) {
 	if errStart == nil {
 		return LineRange{start: start, end: start}, nil
 	}
-	return LineRange{}, fmt.Errorf("Parser: no line range found")
+	return LineRange{}, fmt.Errorf("no line range found")
 }
 
 func parseLine(tokens []lexer.Token, i *int) (Line, error) {
@@ -143,7 +143,7 @@ func parseLine(tokens []lexer.Token, i *int) (Line, error) {
 		*i++
 		return l, nil
 	}
-	return nil, fmt.Errorf("Parser: no address found")
+	return nil, fmt.Errorf("no address found")
 }
 
 func parseCmdType(tokens []lexer.Token, i *int) (string, error) {
@@ -152,5 +152,5 @@ func parseCmdType(tokens []lexer.Token, i *int) (string, error) {
 		*i++
 		return c, nil
 	}
-	return "", fmt.Errorf("Parser: no cmd found")
+	return "", fmt.Errorf("no cmd found")
 }

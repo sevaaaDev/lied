@@ -21,7 +21,7 @@ const (
 
 func Tokenize(input []byte) ([]Token, error) {
 	if len(input) == 0 {
-		return nil, fmt.Errorf("Lexer: empty input")
+		return nil, fmt.Errorf("empty input")
 	}
 	i := 0
 	var tokens []Token
@@ -53,7 +53,7 @@ func Tokenize(input []byte) ([]Token, error) {
 			tokens = append(tokens, Token{Type: TokSymbol, Value: []byte{input[i]}})
 			i++
 		default:
-			return nil, fmt.Errorf("Lexer: invalid input '%s'", string(input[i]))
+			return nil, fmt.Errorf("invalid input '%s'", string(input[i]))
 		}
 	}
 	return tokens, nil

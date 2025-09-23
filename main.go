@@ -8,27 +8,7 @@ import (
 	"lied/parser"
 	"os"
 	"slices"
-	"strconv"
-	"unicode"
 )
-
-func printBuf(buf [][]byte) {
-	for i, l := range buf {
-		fmt.Printf("%2d|%s\n", i+1, string(l))
-	}
-}
-
-func parseCommand(input []byte) (int, error) {
-	var buf []byte
-	for _, v := range input {
-		if !unicode.IsDigit(rune(v)) {
-			return 0, fmt.Errorf("found non digit")
-		}
-		buf = append(buf, v)
-	}
-	i, _ := strconv.Atoi(string(buf))
-	return i, nil
-}
 
 func readFile(filename string) [][]byte {
 	file, err := os.Open(filename)
@@ -88,17 +68,17 @@ func main() {
 		}
 		tokens, err := lexer.Tokenize(line[1:])
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("Lexer:", err)
 			continue
 		}
 		node, err := parser.Parse(tokens)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("Parser:", err)
 			continue
 		}
 		err = node.Eval(ctx)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("Exec:", err)
 			continue
 		}
 	}
