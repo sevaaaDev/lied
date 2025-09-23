@@ -1,6 +1,7 @@
 package lexer
 
 import (
+	"fmt"
 	"unicode"
 )
 
@@ -18,7 +19,10 @@ const (
 	TokSymbol
 )
 
-func Tokenize(input []byte) []Token {
+func Tokenize(input []byte) ([]Token, error) {
+	if len(input) == 0 {
+		return nil, fmt.Errorf("Lexer: empty input")
+	}
 	i := 0
 	var tokens []Token
 	for i < len(input) {
@@ -39,9 +43,18 @@ func Tokenize(input []byte) []Token {
 		case input[i] == 'd':
 			tokens = append(tokens, Token{Type: TokCmd, Value: []byte{input[i]}})
 			i++
-		default:
+		case input[i] == ',':
+			tokens = append(tokens, Token{Type: TokComma})
 			i++
+		case input[i] == '$':
+			tokens = append(tokens, Token{Type: TokSymbol, Value: []byte{input[i]}})
+			i++
+		case input[i] == '.':
+			tokens = append(tokens, Token{Type: TokSymbol, Value: []byte{input[i]}})
+			i++
+		default:
+			return nil, fmt.Errorf("Lexer: invalid input '%s'", string(input[i]))
 		}
 	}
-	return tokens
+	return tokens, nil
 }

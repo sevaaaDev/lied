@@ -1,5 +1,9 @@
 package context
 
+import (
+	"fmt"
+)
+
 type Context struct {
 	Buffer      [][]byte
 	CurrentLine int
@@ -27,5 +31,14 @@ func NewContext() Context {
 }
 
 func cmdPrint(ctx Context, lineRange [2]int) error {
+	if len(lineRange) == 0 {
+		lineRange = [2]int{ctx.CurrentLine,ctx.CurrentLine}
+	}
+	if lineRange[1] > len(ctx.Buffer) {
+		return fmt.Errorf("Print: Invalid Range")
+	}
+	for i := lineRange[0]; i <= lineRange[1]; i++ {
+		fmt.Println(string(ctx.Buffer[i-1]))
+	}
 	return nil
 }

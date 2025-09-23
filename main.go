@@ -55,6 +55,18 @@ func writeFile(filename string, buf [][]byte) {
 	file.Sync()
 }
 
+func readline(scanner *bufio.Scanner, prompt string) []byte {
+	var line []byte
+	fmt.Printf(prompt)
+	for scanner.Scan() {
+		if scanner.Bytes()[0] == '\n' {
+			break
+		}
+		line = append(line, scanner.Bytes()...)
+	}
+	return line
+}
+
 func main() {
 	if len(os.Args) == 1 {
 		fmt.Println("need file")
@@ -65,24 +77,26 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Split(bufio.ScanBytes)
 	ctx.Buffer = buf
-	ctx.CurrentLine = len(buf)
+	ctx.CurrentLine = len(ctx.Buffer)
 	for {
-		var line []byte
-		fmt.Printf("%2d|", ctx.CurrentLine+1)
-		for scanner.Scan() {
-			if scanner.Bytes()[0] == '\n' {
-				break
-			}
-			line = append(line, scanner.Bytes()...)
-		}
+		prompt := fmt.Sprintf("%2d|", ctx.CurrentLine+1)
+		line := readline(scanner, prompt)
 		if line[0] != ':' {
 			ctx.Buffer = slices.Insert(ctx.Buffer, ctx.CurrentLine, line)
 			ctx.CurrentLine++
 			continue
 		}
-		tokens := lexer.Tokenize(line[1:])
-		node, _ := parser.Parse(tokens)
-		err := node.Eval(ctx)
+		tokens, err := lexer.Tokenize(line[1:])
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		node, err := parser.Parse(tokens)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		err = node.Eval(ctx)
 		if err != nil {
 			fmt.Println(err)
 			continue

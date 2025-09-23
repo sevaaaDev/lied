@@ -8,30 +8,30 @@ import (
 )
 
 type Line interface {
-	Eval(context.Context) int
+	Eval(context.Context) (int, error)
 }
 
 type LineNumber struct {
 	rawVal string
 }
 
-func (l LineNumber) Eval(_ context.Context) int {
+func (l LineNumber) Eval(_ context.Context) (int, error) {
 	val, _ := strconv.Atoi(l.rawVal)
-	return val
+	return val, nil
 }
 
 type LineSymbol struct {
 	rawVal string
 }
 
-func (l LineSymbol) Eval(ctx context.Context) int {
+func (l LineSymbol) Eval(ctx context.Context) (int, error) {
 	if l.rawVal == "$" {
-		return len(ctx.Buffer)
+		return len(ctx.Buffer), nil
 	}
 	if l.rawVal == "." {
-		return ctx.CurrentLine
+		return ctx.CurrentLine, nil
 	}
-	return 1
+	return 0, nil
 }
 
 type LineRange struct {
@@ -39,14 +39,48 @@ type LineRange struct {
 	end   Line
 }
 
+func (lr *LineRange) Eval(ctx context.Context) ([2]int, error) {
+	var res [2]int
+	var err error
+	res[0], err = lr.start.Eval(ctx)
+	if err != nil {
+		return [2]int{}, err
+	}
+	res[1], err = lr.end.Eval(ctx)
+	if err != nil {
+		return [2]int{}, err
+	}
+	return res, nil
+}
+
 type CommandNode struct {
-	lineRange LineRange
+	lineRange *LineRange
 	cmd       string
 }
 
 func (c CommandNode) Eval(ctx context.Context) error {
+	lr := [2]int{}
+	var err error
+	if c.lineRange != nil {
+		lr, err = c.lineRange.Eval(ctx)
+	}
+	if err != nil {
+		return err
+	}
+	if c.cmd == "" {
+		c.cmd = "set"
+	}
+	cmd, ok := ctx.Commands[c.cmd]
+	if !ok {
+		return fmt.Errorf("Runtime: Invalid Command")
+	}
+	cmd.Run(ctx, lr)
 	return nil
 }
+
+/* ============================================================
+	Parsing part
+   ============================================================ */
 
 func Parse(tokens []lexer.Token) (CommandNode, error) {
 	i := 0
@@ -54,10 +88,10 @@ func Parse(tokens []lexer.Token) (CommandNode, error) {
 	cmdType, errCmd := parseCmdType(tokens, &i)
 	cmdNode := CommandNode{}
 	if errLr != nil && errCmd != nil {
-		return cmdNode, fmt.Errorf("Parser: nothing parsed, empty command")
+		return cmdNode, fmt.Errorf("Parser: nothing parsed")
 	}
 	if errLr == nil {
-		cmdNode.lineRange = lineRange
+		cmdNode.lineRange = &lineRange
 	}
 	if errCmd == nil {
 		cmdNode.cmd = cmdType
@@ -96,7 +130,6 @@ func parseLine(tokens []lexer.Token, i *int) (Line, error) {
 		*i++
 		return l, nil
 	}
-	*i++
 	return nil, fmt.Errorf("Parser: no address found")
 }
 
@@ -106,6 +139,5 @@ func parseCmdType(tokens []lexer.Token, i *int) (string, error) {
 		*i++
 		return c, nil
 	}
-	*i++
 	return "", fmt.Errorf("Parser: no cmd found")
 }
