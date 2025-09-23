@@ -4,3 +4,4 @@
 - [x] ctx
 - [x] map of cmd
 - [ ] func cmd (print, del, write)
+- [x] peek function for parser

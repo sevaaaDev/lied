@@ -54,7 +54,7 @@ func TestParse(t *testing.T) {
 						start: LineNumber{rawVal: "10"},
 						end:   LineSymbol{rawVal: "$"},
 					},
-					cmd: "set",
+					cmd: "p",
 				},
 			},
 			{
@@ -67,7 +67,7 @@ func TestParse(t *testing.T) {
 						start: LineNumber{rawVal: "1"},
 						end:   LineNumber{rawVal: "10"},
 					},
-					cmd: "set",
+					cmd: "p",
 				},
 			},
 			{
@@ -81,7 +81,7 @@ func TestParse(t *testing.T) {
 						start: LineSymbol{rawVal: "."},
 						end:   LineNumber{rawVal: "10"},
 					},
-					cmd: "set",
+					cmd: "p",
 				},
 			},
 		}

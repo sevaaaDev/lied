@@ -82,11 +82,21 @@ func (c CommandNode) Eval(ctx context.Context) error {
 	Parsing part
    ============================================================ */
 
+func peek(tokens []lexer.Token, want lexer.TokenType, currentIndex int) bool {
+	if currentIndex == len(tokens) {
+		return false
+	}
+	if tokens[currentIndex].Type != want {
+		return false
+	}
+	return true
+}
+
 func Parse(tokens []lexer.Token) (CommandNode, error) {
 	i := 0
 	lineRange, errLr := parseLineRange(tokens, &i)
 	cmdType, errCmd := parseCmdType(tokens, &i)
-	cmdNode := CommandNode{}
+	cmdNode := CommandNode{cmd: "set"}
 	if errLr != nil && errCmd != nil {
 		return cmdNode, fmt.Errorf("Parser: nothing parsed")
 	}
@@ -104,33 +114,31 @@ func Parse(tokens []lexer.Token) (CommandNode, error) {
 
 func parseLineRange(tokens []lexer.Token, i *int) (LineRange, error) {
 	start, errStart := parseLine(tokens, i)
-	// if we have peek(), we can error in that func instead
-	// peek(lexer.TokenType) bool
-	if *i < len(tokens) && tokens[*i].Type != lexer.TokComma {
+	if peek(tokens, lexer.TokComma, *i) {
+		*i++
+		end, errEnd := parseLine(tokens, i)
+		lr := LineRange{start: LineNumber{rawVal: "1"}, end: LineSymbol{rawVal: "$"}}
 		if errStart == nil {
-			return LineRange{start: start, end: start}, nil
+			lr.start = start
 		}
-		return LineRange{}, fmt.Errorf("Parser: no line range found")
+		if errEnd == nil {
+			lr.end = end
+		}
+		return lr, nil
 	}
-	*i++
-	end, errEnd := parseLine(tokens, i)
-	lr := LineRange{start: LineNumber{rawVal: "1"}, end: LineSymbol{rawVal: "$"}}
 	if errStart == nil {
-		lr.start = start
+		return LineRange{start: start, end: start}, nil
 	}
-	if errEnd == nil {
-		lr.end = end
-	}
-	return lr, nil
+	return LineRange{}, fmt.Errorf("Parser: no line range found")
 }
 
 func parseLine(tokens []lexer.Token, i *int) (Line, error) {
-	if tokens[*i].Type == lexer.TokDigits {
+	if peek(tokens, lexer.TokDigits, *i) {
 		l := LineNumber{rawVal: string(tokens[*i].Value)}
 		*i++
 		return l, nil
 	}
-	if tokens[*i].Type == lexer.TokSymbol {
+	if peek(tokens, lexer.TokSymbol, *i) {
 		l := LineSymbol{rawVal: string(tokens[*i].Value)}
 		*i++
 		return l, nil
@@ -139,7 +147,7 @@ func parseLine(tokens []lexer.Token, i *int) (Line, error) {
 }
 
 func parseCmdType(tokens []lexer.Token, i *int) (string, error) {
-	if tokens[*i].Type == lexer.TokCmd {
+	if peek(tokens, lexer.TokCmd, *i) {
 		c := string(tokens[*i].Value)
 		*i++
 		return c, nil
