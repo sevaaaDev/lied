@@ -3,6 +3,7 @@ package context
 import (
 	"fmt"
 	"os"
+	"slices"
 )
 
 type Context struct {
@@ -38,6 +39,16 @@ func NewContext() *Context {
 				Desc: "print buffer",
 				Run:  cmdWrite,
 			},
+			"d": {
+				Name: "del",
+				Desc: "print buffer",
+				Run:  cmdDelete,
+			},
+			"": {
+				Name: "set",
+				Desc: "print buffer",
+				Run:  cmdSet,
+			},
 		},
 	}
 }
@@ -46,11 +57,12 @@ func cmdPrint(ctx *Context, lineRange *[2]int) error {
 	if lineRange == nil {
 		lineRange = &[2]int{ctx.CurrentLine, ctx.CurrentLine}
 	}
-	if lineRange[0] == 0 || lineRange[1] > len(ctx.Buffer) {
+	if lineRange[0] <= 0 || lineRange[1] > len(ctx.Buffer) {
 		return fmt.Errorf("invalid address")
 	}
+	fmt.Println("")
 	for i := lineRange[0]; i <= lineRange[1]; i++ {
-		fmt.Printf("%2d|%s\n", i, string(ctx.Buffer[i-1]))
+		fmt.Printf("%2d│%s\n", i, string(ctx.Buffer[i-1]))
 	}
 	return nil
 }
@@ -72,5 +84,27 @@ func cmdWrite(ctx *Context, _ *[2]int) error {
 	}
 	file.Sync()
 	fmt.Println("wrote to", ctx.Filename)
+	return nil
+}
+
+func cmdDelete(ctx *Context, lineRange *[2]int) error {
+	if lineRange == nil {
+		lineRange = &[2]int{ctx.CurrentLine, ctx.CurrentLine}
+	}
+	if lineRange[0] <= 0 || lineRange[1] > len(ctx.Buffer) {
+		return fmt.Errorf("invalid address")
+	}
+	ctx.Buffer = slices.Delete(ctx.Buffer, lineRange[0]-1, lineRange[1])
+	if ctx.CurrentLine > len(ctx.Buffer) {
+		ctx.CurrentLine = len(ctx.Buffer)
+	}
+	return nil
+}
+
+func cmdSet(ctx *Context, lineRange *[2]int) error {
+	if lineRange[1] > len(ctx.Buffer) {
+		return fmt.Errorf("invalid address")
+	}
+	ctx.CurrentLine = lineRange[1]
 	return nil
 }

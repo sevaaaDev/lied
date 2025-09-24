@@ -95,7 +95,7 @@ func Parse(tokens []lexer.Token) (CommandNode, error) {
 	i := 0
 	lineRange, errLr := parseLineRange(tokens, &i)
 	cmdType, errCmd := parseCmdType(tokens, &i)
-	cmdNode := CommandNode{cmd: "set"}
+	cmdNode := CommandNode{cmd: ""}
 	if i <= len(tokens)-1 {
 		return cmdNode, fmt.Errorf("invalid syntax")
 	}
