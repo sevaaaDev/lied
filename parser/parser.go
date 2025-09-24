@@ -39,18 +39,18 @@ type LineRange struct {
 	end   Line
 }
 
-func (lr *LineRange) Eval(ctx context.Context) ([2]int, error) {
+func (lr *LineRange) Eval(ctx context.Context) (*[2]int, error) {
 	var res [2]int
 	var err error
 	res[0], err = lr.start.Eval(ctx)
 	if err != nil {
-		return [2]int{}, err
+		return nil, err
 	}
 	res[1], err = lr.end.Eval(ctx)
 	if err != nil {
-		return [2]int{}, err
+		return nil, err
 	}
-	return res, nil
+	return &res, nil
 }
 
 type CommandNode struct {
@@ -59,23 +59,22 @@ type CommandNode struct {
 }
 
 func (c CommandNode) Eval(ctx context.Context) error {
-	lr := [2]int{}
 	var err error
+	var lr *[2]int = nil
 	if c.lineRange != nil {
 		lr, err = c.lineRange.Eval(ctx)
-	}
-	if err != nil {
-		return err
-	}
-	if c.cmd == "" {
-		c.cmd = "set"
+		switch true {
+		case err != nil:
+			fallthrough
+		case lr[0] > lr[1]:
+			return fmt.Errorf("invalid line range")
+		}
 	}
 	cmd, ok := ctx.Commands[c.cmd]
 	if !ok {
-		return fmt.Errorf("Runtime: Invalid Command")
+		return fmt.Errorf("unknown command")
 	}
-	cmd.Run(ctx, lr)
-	return nil
+	return cmd.Run(ctx, lr)
 }
 
 /* ============================================================

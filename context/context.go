@@ -13,7 +13,7 @@ type Context struct {
 type Command struct {
 	Name string
 	Desc string
-	Run  func(Context, [2]int) error
+	Run  func(Context, *[2]int) error
 }
 
 func NewContext() Context {
@@ -30,15 +30,15 @@ func NewContext() Context {
 	}
 }
 
-func cmdPrint(ctx Context, lineRange [2]int) error {
-	if len(lineRange) == 0 {
-		lineRange = [2]int{ctx.CurrentLine,ctx.CurrentLine}
+func cmdPrint(ctx Context, lineRange *[2]int) error {
+	if lineRange == nil {
+		lineRange = &[2]int{ctx.CurrentLine, ctx.CurrentLine}
 	}
-	if lineRange[1] > len(ctx.Buffer) {
-		return fmt.Errorf("Print: Invalid Range")
+	if lineRange[0] == 0 || lineRange[1] > len(ctx.Buffer) {
+		return fmt.Errorf("invalid address")
 	}
 	for i := lineRange[0]; i <= lineRange[1]; i++ {
-		fmt.Println(string(ctx.Buffer[i-1]))
+		fmt.Printf("%2d|%s\n", i, string(ctx.Buffer[i-1]))
 	}
 	return nil
 }
