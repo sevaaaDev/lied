@@ -35,12 +35,12 @@ func Tokenize(input []byte) ([]Token, error) {
 			}
 			tokens = append(tokens, Token{Type: TokDigits, Value: buf})
 		case input[i] == 'p':
-			tokens = append(tokens, Token{Type: TokCmd, Value: []byte{input[i]}})
-			i++
+			fallthrough
 		case input[i] == 'q':
-			tokens = append(tokens, Token{Type: TokCmd, Value: []byte{input[i]}})
-			i++
+			fallthrough
 		case input[i] == 'd':
+			fallthrough
+		case input[i] == 'w':
 			tokens = append(tokens, Token{Type: TokCmd, Value: []byte{input[i]}})
 			i++
 		case input[i] == ',':

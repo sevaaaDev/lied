@@ -8,14 +8,14 @@ import (
 )
 
 type Line interface {
-	Eval(context.Context) (int, error)
+	Eval(*context.Context) (int, error)
 }
 
 type LineNumber struct {
 	rawVal string
 }
 
-func (l LineNumber) Eval(_ context.Context) (int, error) {
+func (l LineNumber) Eval(_ *context.Context) (int, error) {
 	val, _ := strconv.Atoi(l.rawVal)
 	return val, nil
 }
@@ -24,7 +24,7 @@ type LineSymbol struct {
 	rawVal string
 }
 
-func (l LineSymbol) Eval(ctx context.Context) (int, error) {
+func (l LineSymbol) Eval(ctx *context.Context) (int, error) {
 	if l.rawVal == "$" {
 		return len(ctx.Buffer), nil
 	}
@@ -39,7 +39,7 @@ type LineRange struct {
 	end   Line
 }
 
-func (lr *LineRange) Eval(ctx context.Context) (*[2]int, error) {
+func (lr *LineRange) Eval(ctx *context.Context) (*[2]int, error) {
 	var res [2]int
 	var err error
 	res[0], err = lr.start.Eval(ctx)
@@ -58,7 +58,7 @@ type CommandNode struct {
 	cmd       string
 }
 
-func (c CommandNode) Eval(ctx context.Context) error {
+func (c CommandNode) Eval(ctx *context.Context) error {
 	var err error
 	var lr *[2]int = nil
 	if c.lineRange != nil {

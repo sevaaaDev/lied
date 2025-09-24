@@ -22,7 +22,6 @@ func readFile(filename string) [][]byte {
 	}
 	return buf
 }
-
 func writeFile(filename string, buf [][]byte) {
 	file, err := os.OpenFile(filename, os.O_WRONLY, 0644)
 	if err == nil {
@@ -58,6 +57,7 @@ func main() {
 	scanner.Split(bufio.ScanBytes)
 	ctx.Buffer = buf
 	ctx.CurrentLine = len(ctx.Buffer)
+	ctx.Filename = os.Args[1]
 	for {
 		prompt := fmt.Sprintf("%2d|", ctx.CurrentLine+1)
 		line := readline(scanner, prompt)
