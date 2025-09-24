@@ -59,9 +59,9 @@ func main() {
 	ctx.CurrentLine = len(ctx.Buffer)
 	ctx.Filename = os.Args[1]
 	for {
-		prompt := fmt.Sprintf("%2d|", ctx.CurrentLine+1)
+		prompt := fmt.Sprintf("%2d│", ctx.CurrentLine+1)
 		line := readline(scanner, prompt)
-		if line[0] != ':' {
+		if len(line) == 0 || line[0] != ':' {
 			ctx.Buffer = slices.Insert(ctx.Buffer, ctx.CurrentLine, line)
 			ctx.CurrentLine++
 			continue
