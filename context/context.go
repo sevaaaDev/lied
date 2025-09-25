@@ -62,7 +62,11 @@ func cmdPrint(ctx *Context, lineRange *[2]int) error {
 	}
 	fmt.Println("")
 	for i := lineRange[0]; i <= lineRange[1]; i++ {
-		fmt.Printf("%2d│%s\n", i, string(ctx.Buffer[i-1]))
+		if i == ctx.CurrentLine+1 {
+			// TODO: this has to print only if next line is printed (append) or prev line is printed (prepend)
+			fmt.Println("*  │")
+		}
+		fmt.Printf("%3d│%s\n", i, string(ctx.Buffer[i-1]))
 	}
 	return nil
 }
