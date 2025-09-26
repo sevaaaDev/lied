@@ -17,8 +17,10 @@ const (
 	TokDigits
 	TokComma
 	TokSymbol
+	TokArg
 )
 
+// TODO: make peek func like parser
 func Tokenize(input []byte) ([]Token, error) {
 	if len(input) == 0 {
 		return nil, fmt.Errorf("empty input")
@@ -35,12 +37,31 @@ func Tokenize(input []byte) ([]Token, error) {
 			}
 			tokens = append(tokens, Token{Type: TokDigits, Value: buf})
 		case input[i] == 'p':
-			fallthrough
+			tokens = append(tokens, Token{Type: TokCmd, Value: []byte{input[i]}})
+			i++
+			for i < len(input) && unicode.IsLetter(rune(input[i])) {
+				tokens = append(tokens, Token{Type: TokArg, Value: []byte{input[i]}})
+				i++
+			}
+			if i < len(input) {
+				return nil, fmt.Errorf("invalid args '%s'", string(input[i]))
+			}
+		case input[i] == 'w':
+			tokens = append(tokens, Token{Type: TokCmd, Value: []byte{input[i]}})
+			i++
+			for i < len(input) && unicode.IsSpace(rune(input[i])) { // skip all prefix space
+				i++
+			}
+			for i < len(input) {
+				buf = append(buf, input[i])
+				i++
+			}
+			if len(buf) != 0 {
+				tokens = append(tokens, Token{Type: TokArg, Value: buf})
+			}
 		case input[i] == 'q':
 			fallthrough
 		case input[i] == 'd':
-			fallthrough
-		case input[i] == 'w':
 			tokens = append(tokens, Token{Type: TokCmd, Value: []byte{input[i]}})
 			i++
 		case input[i] == ',':
