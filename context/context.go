@@ -3,6 +3,7 @@ package context
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"slices"
 	"strings"
 )
@@ -44,6 +45,11 @@ func NewContext() *Context {
 				Name: "del",
 				Desc: "print buffer",
 				Run:  cmdDelete,
+			},
+			"s": {
+				Name: "sub",
+				Desc: "print buffer",
+				Run:  cmdSubstitute,
 			},
 			"": {
 				Name: "set",
@@ -87,7 +93,7 @@ func cmdWrite(ctx *Context, _ *[2]int, args []string) error {
 	}
 	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return fmt.Errorf(err.Error())
+		return err
 	}
 	defer file.Close()
 	bytesWritten := 0
@@ -122,4 +128,31 @@ func cmdSet(ctx *Context, lineRange *[2]int, _ []string) error {
 	}
 	ctx.CurrentLine = lineRange[1]
 	return nil
+}
+
+func cmdSubstitute(ctx *Context, lineRange *[2]int, args []string) error {
+	if lineRange == nil {
+		lineRange = &[2]int{ctx.CurrentLine, ctx.CurrentLine}
+	}
+	if len(args) < 2 {
+		return fmt.Errorf("invalid arguments")
+	}
+	re, err := regexp.Compile(args[0])
+	if err != nil {
+		return err
+	}
+	newLine := re.ReplaceAllFunc(ctx.Buffer[lineRange[1]-1], makeReplFunc(args[1]))
+	fmt.Println(string(newLine))
+	return nil
+}
+
+func makeReplFunc(repl string) func([]byte) []byte {
+	occurences := 1
+	return func(b []byte) []byte {
+		if occurences > 1 {
+			return b
+		}
+		occurences++
+		return []byte(repl)
+	}
 }

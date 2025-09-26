@@ -20,6 +20,16 @@ const (
 	TokArg
 )
 
+func peek(input []byte, want byte, currentIndex int) bool {
+	if currentIndex >= len(input) {
+		return false
+	}
+	if input[currentIndex] != want {
+		return false
+	}
+	return true
+}
+
 // TODO: make peek func like parser
 func Tokenize(input []byte) ([]Token, error) {
 	if len(input) == 0 {
@@ -46,6 +56,26 @@ func Tokenize(input []byte) ([]Token, error) {
 			if len(buf) != 0 {
 				tokens = append(tokens, Token{Type: TokArg, Value: buf})
 			}
+		case input[i] == 's':
+			tokens = append(tokens, Token{Type: TokCmd, Value: []byte{input[i]}})
+			i++
+			if !peek(input, '/', i) {
+				return nil, fmt.Errorf("invalid arguments")
+			}
+			i++
+			for i < len(input) && !peek(input, '/', i) {
+				buf = append(buf, input[i])
+				i++
+			}
+			i++
+			tokens = append(tokens, Token{Type: TokArg, Value: buf})
+			buf = []byte{}
+			for i < len(input) && !peek(input, '/', i) {
+				buf = append(buf, input[i])
+				i++
+			}
+			i++
+			tokens = append(tokens, Token{Type: TokArg, Value: buf})
 		case input[i] == 'p':
 			fallthrough
 		case input[i] == 'q':
