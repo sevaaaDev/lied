@@ -60,13 +60,17 @@ func cmdPrint(ctx *Context, lineRange *[2]int) error {
 	if lineRange[0] <= 0 || lineRange[1] > len(ctx.Buffer) {
 		return fmt.Errorf("invalid address")
 	}
-	fmt.Println("")
+	// fmt.Println("")
+	printPseudoLine := false
 	for i := lineRange[0]; i <= lineRange[1]; i++ {
-		if i == ctx.CurrentLine+1 {
-			// TODO: this has to print only if next line is printed (append) or prev line is printed (prepend)
+		if printPseudoLine {
 			fmt.Println("*  │")
+			printPseudoLine = false
 		}
 		fmt.Printf("%3d│%s\n", i, string(ctx.Buffer[i-1]))
+		if i == ctx.CurrentLine {
+			printPseudoLine = !printPseudoLine
+		}
 	}
 	return nil
 }
