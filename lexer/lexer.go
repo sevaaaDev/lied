@@ -39,9 +39,6 @@ func Tokenize(input []byte) ([]Token, error) {
 		case input[i] == 'w':
 			tokens = append(tokens, Token{Type: TokCmd, Value: []byte{input[i]}})
 			i++
-			for i < len(input) && unicode.IsSpace(rune(input[i])) { // skip all prefix space
-				i++
-			}
 			for i < len(input) {
 				buf = append(buf, input[i])
 				i++

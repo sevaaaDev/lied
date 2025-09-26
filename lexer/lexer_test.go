@@ -29,7 +29,7 @@ func TestTokenize(t *testing.T) {
 			Input: []byte("w filename.txt"),
 			Want: []Token{
 				{Type: TokCmd, Value: []byte("w")},
-				{Type: TokArg, Value: []byte("filename.txt")}},
+				{Type: TokArg, Value: []byte(" filename.txt")}},
 		},
 	}
 	for _, c := range cases {

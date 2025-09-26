@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"slices"
+	"strings"
 )
 
 type Context struct {
@@ -82,11 +83,11 @@ func cmdQuit(_ *Context, _ *[2]int, _ []string) error {
 func cmdWrite(ctx *Context, _ *[2]int, args []string) error {
 	filename := ctx.Filename
 	if len(args) > 0 {
-		filename = args[0]
+		filename = strings.TrimSpace(args[0])
 	}
-	file, err := os.OpenFile(filename, os.O_WRONLY, 0644)
+	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return fmt.Errorf("error opening file %s", err)
+		return fmt.Errorf(err.Error())
 	}
 	defer file.Close()
 	bytesWritten := 0
