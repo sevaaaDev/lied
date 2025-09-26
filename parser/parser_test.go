@@ -41,7 +41,7 @@ func TestParse(t *testing.T) {
 						start: LineNumber{rawVal: "10"},
 						end:   LineNumber{rawVal: "10"},
 					},
-					cmd: "set",
+					cmd: "",
 				},
 			},
 			{
