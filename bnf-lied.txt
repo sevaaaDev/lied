@@ -1,5 +1,5 @@
-C_Command = LineRange Command
-	  |           Command
+C_Command = LineRange Command {Arg}
+	  |           Command {Arg}
 	  | LineRange
 
 LineRange = Line
@@ -12,16 +12,14 @@ LineRange = Line
 
    Digits = 0-9 {0-9}
 
-  Command = 'p' [PolyArg] 
-	  | 's' [PolyArg]
-	  | 'g' [PolyArg]
-	  | 'w' [MonoArg] 
-	  | 'r' [MonoArg] 
-	  | 'e' [MonoArg] 
-          | 'd' 
-	  | 'q' 
+  Command = 'p'
+	  | 's'
+	  | 'g'
+	  | 'w'
+	  | 'r'
+	  | 'e'
+          | 'd'
+	  | 'q'
 	  | ''
 
-  PolyArg = Arg {Arg}
-
-  MonoArg = Arg
+      Arg = alnum {alnum}

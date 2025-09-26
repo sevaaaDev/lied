@@ -36,16 +36,6 @@ func Tokenize(input []byte) ([]Token, error) {
 				i++
 			}
 			tokens = append(tokens, Token{Type: TokDigits, Value: buf})
-		case input[i] == 'p':
-			tokens = append(tokens, Token{Type: TokCmd, Value: []byte{input[i]}})
-			i++
-			for i < len(input) && unicode.IsLetter(rune(input[i])) {
-				tokens = append(tokens, Token{Type: TokArg, Value: []byte{input[i]}})
-				i++
-			}
-			if i < len(input) {
-				return nil, fmt.Errorf("invalid args '%s'", string(input[i]))
-			}
 		case input[i] == 'w':
 			tokens = append(tokens, Token{Type: TokCmd, Value: []byte{input[i]}})
 			i++
@@ -59,6 +49,8 @@ func Tokenize(input []byte) ([]Token, error) {
 			if len(buf) != 0 {
 				tokens = append(tokens, Token{Type: TokArg, Value: buf})
 			}
+		case input[i] == 'p':
+			fallthrough
 		case input[i] == 'q':
 			fallthrough
 		case input[i] == 'd':

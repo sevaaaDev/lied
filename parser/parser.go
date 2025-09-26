@@ -56,6 +56,7 @@ func (lr *LineRange) Eval(ctx *context.Context) (*[2]int, error) {
 type CommandNode struct {
 	lineRange *LineRange
 	cmd       string
+	args      []string
 }
 
 func (c CommandNode) Eval(ctx *context.Context) error {
@@ -74,7 +75,7 @@ func (c CommandNode) Eval(ctx *context.Context) error {
 	if !ok {
 		return fmt.Errorf("unknown command")
 	}
-	return cmd.Run(ctx, lr)
+	return cmd.Run(ctx, lr, c.args)
 }
 
 /* ============================================================
@@ -95,11 +96,12 @@ func Parse(tokens []lexer.Token) (CommandNode, error) {
 	i := 0
 	lineRange, errLr := parseLineRange(tokens, &i)
 	cmdType, errCmd := parseCmdType(tokens, &i)
+	args, errArgs := parseArgs(tokens, &i)
 	cmdNode := CommandNode{cmd: ""}
 	if i <= len(tokens)-1 {
 		return cmdNode, fmt.Errorf("invalid syntax")
 	}
-	if errLr != nil && errCmd != nil {
+	if errLr != nil && errCmd != nil && errArgs != nil {
 		return cmdNode, fmt.Errorf("nothing is parsed")
 	}
 	if errLr == nil {
@@ -108,7 +110,18 @@ func Parse(tokens []lexer.Token) (CommandNode, error) {
 	if errCmd == nil {
 		cmdNode.cmd = cmdType
 	}
+	if errArgs == nil {
+		cmdNode.args = args
+	}
 	return cmdNode, nil
+}
+func parseArgs(tokens []lexer.Token, i *int) ([]string, error) {
+	var args []string = nil
+	for peek(tokens, lexer.TokArg, *i) {
+		args = append(args, string(tokens[*i].Value))
+		*i++
+	}
+	return args, nil
 }
 
 func parseLineRange(tokens []lexer.Token, i *int) (LineRange, error) {

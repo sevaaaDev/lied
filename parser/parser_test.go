@@ -84,6 +84,29 @@ func TestParse(t *testing.T) {
 					cmd: "p",
 				},
 			},
+			{
+				input: []lexer.Token{
+					{Type: lexer.TokCmd, Value: []byte("p")},
+					{Type: lexer.TokArg, Value: []byte("l")},
+				},
+				want: CommandNode{
+					lineRange: nil,
+					cmd:       "p",
+					args:      []string{"l"},
+				},
+			},
+			{
+				input: []lexer.Token{
+					{Type: lexer.TokCmd, Value: []byte("p")},
+					{Type: lexer.TokArg, Value: []byte("l")},
+					{Type: lexer.TokArg, Value: []byte("l")},
+				},
+				want: CommandNode{
+					lineRange: nil,
+					cmd:       "p",
+					args:      []string{"l", "l"},
+				},
+			},
 		}
 		for _, c := range cases {
 			got, _ := Parse(c.input)

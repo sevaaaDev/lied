@@ -16,7 +16,7 @@ type Context struct {
 type Command struct {
 	Name string
 	Desc string
-	Run  func(*Context, *[2]int) error
+	Run  func(*Context, *[2]int, []string) error
 }
 
 func NewContext() *Context {
@@ -53,14 +53,13 @@ func NewContext() *Context {
 	}
 }
 
-func cmdPrint(ctx *Context, lineRange *[2]int) error {
+func cmdPrint(ctx *Context, lineRange *[2]int, _ []string) error {
 	if lineRange == nil {
 		lineRange = &[2]int{ctx.CurrentLine, ctx.CurrentLine}
 	}
 	if lineRange[0] <= 0 || lineRange[1] > len(ctx.Buffer) {
 		return fmt.Errorf("invalid address")
 	}
-	// fmt.Println("")
 	printPseudoLine := false
 	for i := lineRange[0]; i <= lineRange[1]; i++ {
 		if printPseudoLine {
@@ -75,15 +74,19 @@ func cmdPrint(ctx *Context, lineRange *[2]int) error {
 	return nil
 }
 
-func cmdQuit(_ *Context, _ *[2]int) error {
+func cmdQuit(_ *Context, _ *[2]int, _ []string) error {
 	os.Exit(0)
 	return nil
 }
 
-func cmdWrite(ctx *Context, _ *[2]int) error {
-	file, err := os.OpenFile(ctx.Filename, os.O_WRONLY, 0644)
+func cmdWrite(ctx *Context, _ *[2]int, args []string) error {
+	filename := ctx.Filename
+	if len(args) > 0 {
+		filename = args[0]
+	}
+	file, err := os.OpenFile(filename, os.O_WRONLY, 0644)
 	if err != nil {
-		return fmt.Errorf("error writing to file :%s", err)
+		return fmt.Errorf("error opening file %s", err)
 	}
 	defer file.Close()
 	bytesWritten := 0
@@ -98,7 +101,7 @@ func cmdWrite(ctx *Context, _ *[2]int) error {
 	return nil
 }
 
-func cmdDelete(ctx *Context, lineRange *[2]int) error {
+func cmdDelete(ctx *Context, lineRange *[2]int, _ []string) error {
 	if lineRange == nil {
 		lineRange = &[2]int{ctx.CurrentLine, ctx.CurrentLine}
 	}
@@ -112,7 +115,7 @@ func cmdDelete(ctx *Context, lineRange *[2]int) error {
 	return nil
 }
 
-func cmdSet(ctx *Context, lineRange *[2]int) error {
+func cmdSet(ctx *Context, lineRange *[2]int, _ []string) error {
 	if lineRange[1] > len(ctx.Buffer) {
 		return fmt.Errorf("invalid address")
 	}
