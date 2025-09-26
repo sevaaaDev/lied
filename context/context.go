@@ -86,12 +86,15 @@ func cmdWrite(ctx *Context, _ *[2]int) error {
 		return fmt.Errorf("error writing to file :%s", err)
 	}
 	defer file.Close()
+	bytesWritten := 0
 	for _, v := range ctx.Buffer {
-		file.Write(v)
-		file.Write([]byte{10})
+		n, _ := file.Write(v)
+		bytesWritten += n
+		n, _ = file.Write([]byte{10})
+		bytesWritten += n
 	}
 	file.Sync()
-	fmt.Println("wrote to", ctx.Filename)
+	fmt.Println(bytesWritten)
 	return nil
 }
 
