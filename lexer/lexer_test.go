@@ -57,13 +57,22 @@ func TestTokenize(t *testing.T) {
 				{Type: TokArg, Value: []byte("repl")},
 				{Type: TokArg, Value: []byte("1")},
 			},
-		}, {
+		},
+		{
 			Input: []byte("s/re/repl/g"),
 			Want: []Token{
 				{Type: TokCmd, Value: []byte("s")},
 				{Type: TokArg, Value: []byte("re")},
 				{Type: TokArg, Value: []byte("repl")},
 				{Type: TokArg, Value: []byte("g")},
+			},
+		},
+		{
+			Input: []byte("2t10"),
+			Want: []Token{
+				{Type: TokDigits, Value: []byte("2")},
+				{Type: TokCmd, Value: []byte("t")},
+				{Type: TokArg, Value: []byte("10")},
 			},
 		},
 	}

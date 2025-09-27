@@ -53,6 +53,11 @@ func NewContext() *Context {
 				Desc: "print buffer",
 				Run:  cmdSubstitute,
 			},
+			"t": {
+				Name: "transfer (copy)",
+				Desc: "print buffer",
+				Run:  cmdTransfer,
+			},
 			"": {
 				Name: "set",
 				Desc: "print buffer",
@@ -182,5 +187,27 @@ func cmdSubstitute(ctx *Context, lineRange *[2]int, args []string) error {
 		ctx.Buffer[i-1] = newLine
 		cmdPrint(ctx, &[2]int{i, i}, nil)
 	}
+	return nil
+}
+
+func cmdTransfer(ctx *Context, lineRange *[2]int, args []string) error {
+	if lineRange == nil && args == nil {
+		return nil
+	}
+	target := ctx.CurrentLine
+	if args != nil {
+		v, err := strconv.Atoi(args[0])
+		if err != nil {
+			return fmt.Errorf("invalid arguments")
+		}
+		target = v
+	}
+	if lineRange == nil {
+		lineRange = &[2]int{ctx.CurrentLine, ctx.CurrentLine}
+	}
+	if lineRange[0] <= 0 || lineRange[1] > len(ctx.Buffer) || target <= 0 || target > len(ctx.Buffer)+1 {
+		return fmt.Errorf("invalid address")
+	}
+	ctx.Buffer = slices.Insert(ctx.Buffer, target-1, ctx.Buffer[lineRange[0]-1:lineRange[1]]...)
 	return nil
 }

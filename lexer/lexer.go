@@ -46,6 +46,8 @@ func Tokenize(input []byte) ([]Token, error) {
 				i++
 			}
 			tokens = append(tokens, Token{Type: TokDigits, Value: buf})
+		case input[i] == 't':
+			fallthrough
 		case input[i] == 'w':
 			tokens = append(tokens, Token{Type: TokCmd, Value: []byte{input[i]}})
 			i++
