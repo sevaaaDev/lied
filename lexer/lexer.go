@@ -59,26 +59,19 @@ func Tokenize(input []byte) ([]Token, error) {
 		case input[i] == 's':
 			tokens = append(tokens, Token{Type: TokCmd, Value: []byte{input[i]}})
 			i++
-			if !peek(input, '/', i) {
-				return nil, fmt.Errorf("invalid arguments")
-			}
-			i++
-			for i < len(input) && !peek(input, '/', i) {
-				buf = append(buf, input[i])
+			// s/re/repl
+			// s/re/
+			// s/re
+			// s
+			for peek(input, '/', i) {
 				i++
+				buf = []byte{}
+				for i < len(input) && !peek(input, '/', i) {
+					buf = append(buf, input[i])
+					i++
+				}
+				tokens = append(tokens, Token{Type: TokArg, Value: buf})
 			}
-			tokens = append(tokens, Token{Type: TokArg, Value: buf})
-			buf = []byte{}
-			if !peek(input, '/', i) {
-				return nil, fmt.Errorf("invalid arguments")
-			}
-			i++
-			for i < len(input) && !peek(input, '/', i) {
-				buf = append(buf, input[i])
-				i++
-			}
-			i++
-			tokens = append(tokens, Token{Type: TokArg, Value: buf})
 		case input[i] == 'p':
 			fallthrough
 		case input[i] == 'q':

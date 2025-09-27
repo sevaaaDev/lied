@@ -44,7 +44,10 @@ func TestTokenize(t *testing.T) {
 		},
 		{
 			Input: []byte("s/re"),
-			Want:  nil,
+			Want: []Token{
+				{Type: TokCmd, Value: []byte("s")},
+				{Type: TokArg, Value: []byte("re")},
+			},
 		},
 	}
 	for i, c := range cases {
