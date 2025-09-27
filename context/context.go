@@ -5,7 +5,9 @@ import (
 	"os"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
+	"unicode"
 )
 
 type Context struct {
@@ -131,11 +133,11 @@ func cmdSet(ctx *Context, lineRange *[2]int, _ []string) error {
 	return nil
 }
 
-func replacerFunc(repl string) func([]byte) []byte {
-	occurences := 1
+func replacerFunc(repl string, n int) func([]byte) []byte {
+	occurences := 0
 	return func(b []byte) []byte {
-		if occurences == 1 {
-			occurences++
+		occurences++
+		if n == 0 || occurences == n {
 			return []byte(repl)
 		}
 		return b
@@ -148,15 +150,35 @@ func cmdSubstitute(ctx *Context, lineRange *[2]int, args []string) error {
 	if lineRange[0] <= 0 || lineRange[1] > len(ctx.Buffer) {
 		return fmt.Errorf("invalid address")
 	}
-	if len(args) < 2 {
+	if len(args) == 0 {
 		return fmt.Errorf("invalid arguments")
 	}
-	re, err := regexp.CompilePOSIX(args[0])
+	regex := args[0]
+	repl := ""
+	if len(args) >= 2 {
+		repl = args[1]
+	}
+	suffix := 1
+	// TODO: probably need refactor
+	if len(args) >= 3 && len(args[2]) != 0 {
+		if len(args[2]) > 1 {
+			return fmt.Errorf("invalid arguments")
+		}
+		if unicode.IsDigit(rune(args[2][0])) {
+			v, _ := strconv.Atoi(args[2])
+			suffix = v
+		} else if args[2] == "g" {
+			suffix = 0
+		} else {
+			return fmt.Errorf("invalid arguments")
+		}
+	}
+	re, err := regexp.CompilePOSIX(regex)
 	if err != nil {
 		return err
 	}
 	for i := lineRange[0]; i <= lineRange[1]; i++ {
-		newLine := re.ReplaceAllFunc(ctx.Buffer[i-1], replacerFunc(args[1]))
+		newLine := re.ReplaceAllFunc(ctx.Buffer[i-1], replacerFunc(repl, suffix))
 		ctx.Buffer[i-1] = newLine
 		cmdPrint(ctx, &[2]int{i, i}, nil)
 	}
