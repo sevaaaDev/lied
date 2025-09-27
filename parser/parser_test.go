@@ -41,7 +41,7 @@ func TestParse(t *testing.T) {
 						start: LineNumber{rawVal: "10"},
 						end:   LineNumber{rawVal: "10"},
 					},
-					cmd: "set",
+					cmd: "",
 				},
 			},
 			{
@@ -82,6 +82,29 @@ func TestParse(t *testing.T) {
 						end:   LineNumber{rawVal: "10"},
 					},
 					cmd: "p",
+				},
+			},
+			{
+				input: []lexer.Token{
+					{Type: lexer.TokCmd, Value: []byte("p")},
+					{Type: lexer.TokArg, Value: []byte("l")},
+				},
+				want: CommandNode{
+					lineRange: nil,
+					cmd:       "p",
+					args:      []string{"l"},
+				},
+			},
+			{
+				input: []lexer.Token{
+					{Type: lexer.TokCmd, Value: []byte("p")},
+					{Type: lexer.TokArg, Value: []byte("l")},
+					{Type: lexer.TokArg, Value: []byte("l")},
+				},
+				want: CommandNode{
+					lineRange: nil,
+					cmd:       "p",
+					args:      []string{"l", "l"},
 				},
 			},
 		}

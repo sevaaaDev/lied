@@ -1,0 +1,25 @@
+C_Command = LineRange Command {Arg}
+	  |           Command {Arg}
+	  | LineRange
+
+LineRange = Line
+	  | [Line] ',' [Line]
+
+     Line = Digits
+          | Symbol
+
+   Symbol = '$' | '.'
+
+   Digits = 0-9 {0-9}
+
+  Command = 'p'
+	  | 's'
+	  | 'g'
+	  | 'w'
+	  | 'r'
+	  | 'e'
+          | 'd'
+	  | 'q'
+	  | ''
+
+      Arg = alnum {alnum}

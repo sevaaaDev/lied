@@ -1,7 +1,13 @@
 - [x] struct for node
 - [x] parser recursive descent
-- [ ] eval for node
+- [x] eval for node
 - [x] ctx
 - [x] map of cmd
-- [ ] func cmd (print, del, write)
+- [x] func cmd (print, del, write)
 - [x] peek function for parser
+
+# param cmd
+- [ ] add param to grammar (token arg is just string)
+- [ ] parser handle param
+        {tokDigit, tokComma, tokDigit, tokCmd, tokArg, tokArg}
+- [ ] cmd handle param
