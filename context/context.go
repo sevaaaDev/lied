@@ -127,32 +127,38 @@ func cmdSet(ctx *Context, lineRange *[2]int, _ []string) error {
 		return fmt.Errorf("invalid address")
 	}
 	ctx.CurrentLine = lineRange[1]
+	cmdPrint(ctx, lineRange, nil)
 	return nil
 }
 
+func replacerFunc(repl string) func([]byte) []byte {
+	occurences := 1
+	return func(b []byte) []byte {
+		if occurences == 1 {
+			occurences++
+			return []byte(repl)
+		}
+		return b
+	}
+}
 func cmdSubstitute(ctx *Context, lineRange *[2]int, args []string) error {
 	if lineRange == nil {
 		lineRange = &[2]int{ctx.CurrentLine, ctx.CurrentLine}
 	}
+	if lineRange[0] <= 0 || lineRange[1] > len(ctx.Buffer) {
+		return fmt.Errorf("invalid address")
+	}
 	if len(args) < 2 {
 		return fmt.Errorf("invalid arguments")
 	}
-	re, err := regexp.Compile(args[0])
+	re, err := regexp.CompilePOSIX(args[0])
 	if err != nil {
 		return err
 	}
-	newLine := re.ReplaceAllFunc(ctx.Buffer[lineRange[1]-1], makeReplFunc(args[1]))
-	fmt.Println(string(newLine))
-	return nil
-}
-
-func makeReplFunc(repl string) func([]byte) []byte {
-	occurences := 1
-	return func(b []byte) []byte {
-		if occurences > 1 {
-			return b
-		}
-		occurences++
-		return []byte(repl)
+	for i := lineRange[0]; i <= lineRange[1]; i++ {
+		newLine := re.ReplaceAllFunc(ctx.Buffer[i-1], replacerFunc(args[1]))
+		ctx.Buffer[i-1] = newLine
+		cmdPrint(ctx, &[2]int{i, i}, nil)
 	}
+	return nil
 }
