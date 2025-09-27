@@ -22,7 +22,7 @@ Here are the list of commands with its default range prefix:
 The start and end range defaults to 1 and $ respectively. 
 Therefore, `3,p` means line 3 until last line, and `,3p` means line 1 until line 3.
 A command containing only line range will set the current line to the end range (e.g. `3,4` set current line to line 4).
-If you haven't figure it out, `1p` is the same as `1,1p`.
+A range may accept a single number without comma, which causes the start and end range to be that same number (e.g. `3p` is equal to `3,3p`)
 
 example:
 - `:,p` print whole buffer
