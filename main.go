@@ -22,17 +22,6 @@ func readFile(filename string) [][]byte {
 	}
 	return buf
 }
-func writeFile(filename string, buf [][]byte) {
-	file, err := os.OpenFile(filename, os.O_WRONLY, 0644)
-	if err == nil {
-		defer file.Close()
-	}
-	for _, v := range buf {
-		file.Write(v)
-		file.Write([]byte{10})
-	}
-	file.Sync()
-}
 
 func readline(scanner *bufio.Scanner, prompt string) []byte {
 	var line []byte
