@@ -31,5 +31,8 @@ example:
 - `:w main.go` save to file main.go
 - `:32` set current line to line 32
 
-## Goal
-apart from basic editing experience, i also want to add syntax highlighting. idk if its worth it
+## Install
+you can install from source
+1. clone this repo
+2. `git checkout v0.2.0`
+3. `go install`
