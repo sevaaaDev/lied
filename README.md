@@ -17,8 +17,8 @@ Here are the list of commands with its default range prefix:
 - 1,$w FILE = save to FILE
 - q = quit
 - .,.s = substitute
-. (dot) means current line, $ (dollar) means last line. 
 
+. (dot) means current line, $ (dollar) means last line. 
 The start and end range defaults to 1 and $ respectively. 
 Therefore, `3,p` means line 3 until last line, and `,3p` means line 1 until line 3.
 A command containing only line range will set the current line to the end range (e.g. `3,4` set current line to line 4).
