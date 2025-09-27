@@ -42,6 +42,10 @@ func TestTokenize(t *testing.T) {
 				{Type: TokArg, Value: []byte{}},
 			},
 		},
+		{
+			Input: []byte("s/re"),
+			Want:  nil,
+		},
 	}
 	for i, c := range cases {
 		fmt.Println(i)

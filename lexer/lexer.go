@@ -67,9 +67,12 @@ func Tokenize(input []byte) ([]Token, error) {
 				buf = append(buf, input[i])
 				i++
 			}
-			i++
 			tokens = append(tokens, Token{Type: TokArg, Value: buf})
 			buf = []byte{}
+			if !peek(input, '/', i) {
+				return nil, fmt.Errorf("invalid arguments")
+			}
+			i++
 			for i < len(input) && !peek(input, '/', i) {
 				buf = append(buf, input[i])
 				i++
