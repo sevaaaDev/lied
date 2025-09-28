@@ -208,6 +208,15 @@ func cmdTransfer(ctx *Context, lineRange *[2]int, args []string) error {
 	if lineRange[0] <= 0 || lineRange[1] > len(ctx.Buffer) || target <= 0 || target > len(ctx.Buffer)+1 {
 		return fmt.Errorf("invalid address")
 	}
+	// NOTE: code below is better bcs we COPY the line.
+	// but the current implementation dont cause problem bcs cmdSubstitute give you new slice (including the array)
+	//
+	// for i := lineRange[0]; i <= lineRange[1]; i++ {
+	// 	line := make([]byte, len(ctx.Buffer[i-1]))
+	// 	copy(line, ctx.Buffer[i-1])
+	// 	ctx.Buffer = slices.Insert(ctx.Buffer, target-1, line)
+	// }
+
 	ctx.Buffer = slices.Insert(ctx.Buffer, target-1, ctx.Buffer[lineRange[0]-1:lineRange[1]]...)
 	return nil
 }
