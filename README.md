@@ -37,7 +37,7 @@ example:
 - `:1,5t10` copy line 1-5 and paste it to line 10
 
 ## Install
-you can install from source
+you can install from source or install the prebuilt binary in the release page
 1. clone this repo
-2. `git checkout v0.2.0`
+2. `git checkout v0.3.0`
 3. `go install`
