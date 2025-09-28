@@ -98,11 +98,15 @@ func cmdWrite(ctx *Context, _ *[2]int, args []string) error {
 	if len(args) > 0 {
 		filename = strings.TrimSpace(args[0])
 	}
+	if filename == "" {
+		return fmt.Errorf("invalid filename")
+	}
 	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
+	file.Truncate(0)
 	bytesWritten := 0
 	for _, v := range ctx.Buffer {
 		n, _ := file.Write(v)

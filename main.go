@@ -10,17 +10,18 @@ import (
 	"slices"
 )
 
-func readFile(filename string) [][]byte {
+func readFile(filename string) ([][]byte, error) {
 	file, err := os.Open(filename)
-	if err == nil {
-		defer file.Close()
+	if err != nil {
+		return nil, err
 	}
+	defer file.Close()
 	scanner := bufio.NewScanner(file)
 	var buf [][]byte
 	for scanner.Scan() {
 		buf = append(buf, scanner.Bytes())
 	}
-	return buf
+	return buf, nil
 }
 
 func readline(scanner *bufio.Scanner, prompt string) []byte {
@@ -36,17 +37,19 @@ func readline(scanner *bufio.Scanner, prompt string) []byte {
 }
 
 func main() {
-	if len(os.Args) == 1 {
-		fmt.Println("need file")
-		os.Exit(1)
-	}
 	ctx := context.NewContext()
-	buf := readFile(os.Args[1])
+	if len(os.Args) > 1 {
+		buf, err := readFile(os.Args[1])
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		ctx.Buffer = buf
+		ctx.Filename = os.Args[1]
+	}
+	ctx.CurrentLine = len(ctx.Buffer)
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Split(bufio.ScanBytes)
-	ctx.Buffer = buf
-	ctx.CurrentLine = len(ctx.Buffer)
-	ctx.Filename = os.Args[1]
 	for {
 		prompt := "*a │"
 		line := readline(scanner, prompt)
