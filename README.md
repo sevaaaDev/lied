@@ -1,5 +1,7 @@
 # Lied - Line Editor
 
+https://github.com/user-attachments/assets/cb23d21c-f921-4200-9c76-423428fbdac1
+
 A simple line-based text editor that can do basic things
 - write text (of course)
 - substitute regexp (s/re/repl/)
