@@ -116,6 +116,7 @@ func cmdWrite(ctx *Context, _ *[2]int, args []string) error {
 	}
 	file.Sync()
 	fmt.Println(bytesWritten)
+	ctx.Filename = filename
 	return nil
 }
 
