@@ -143,11 +143,12 @@ func cmdSet(ctx *Context, lineRange *[2]int, _ []string) error {
 	return nil
 }
 
-func replacerFunc(repl string, n int) func([]byte) []byte {
+func replacerFunc(repl string, n int, found *bool) func([]byte) []byte {
 	occurences := 0
 	return func(b []byte) []byte {
 		occurences++
 		if n == 0 || occurences == n {
+			*found = true
 			return []byte(repl)
 		}
 		return b
@@ -188,9 +189,14 @@ func cmdSubstitute(ctx *Context, lineRange *[2]int, args []string) error {
 		return err
 	}
 	for i := lineRange[0]; i <= lineRange[1]; i++ {
-		newLine := re.ReplaceAllFunc(ctx.Buffer[i-1], replacerFunc(repl, suffix))
+		found := false
+		newLine := re.ReplaceAllFunc(ctx.Buffer[i-1], replacerFunc(repl, suffix, &found))
 		ctx.Buffer[i-1] = newLine
-		cmdPrint(ctx, &[2]int{i, i}, nil)
+		if found {
+			cmdPrint(ctx, &[2]int{i, i}, nil)
+		} else {
+			return fmt.Errorf("no match")
+		}
 	}
 	return nil
 }
