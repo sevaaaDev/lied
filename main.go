@@ -42,8 +42,14 @@ func readline(scanner *bufio.Scanner, prompt string) []byte {
 }
 
 type Cursor struct {
-	pos int
+	Pos int
 }
+type Buffer struct {
+	value []byte
+	Cursor
+}
+
+// TODO: make method for delete, insert and stuff for buffer and cursor
 
 func main() {
 	ctx := context.NewContext()
@@ -68,7 +74,7 @@ func main() {
 	text := make([]byte, 0, 50)
 	text = append(text, []byte("hello world")...)
 	cursor := Cursor{
-		pos: len(text),
+		Pos: len(text),
 	}
 	bigB := make([]byte, 0, 10)
 	logFile, err := os.OpenFile("log.txt", os.O_APPEND|os.O_WRONLY, 0644)
@@ -82,8 +88,8 @@ func main() {
 		fmt.Print("\033[2K") // clear current line
 		fmt.Print(string(text))
 		fmt.Print("\033[0E") // move to start of line
-		if cursor.pos > 0 {
-			fmt.Printf("\033[%dC", cursor.pos)
+		if cursor.Pos > 0 {
+			fmt.Printf("\033[%dC", cursor.Pos)
 		}
 		b := make([]byte, 3)
 		_, err = os.Stdin.Read(b)
@@ -94,13 +100,13 @@ func main() {
 		if b[0] == 27 && b[1] == '[' {
 			switch b[2] {
 			case 'C':
-				if cursor.pos < len(text) {
+				if cursor.Pos < len(text) {
 					fmt.Fprintln(logFile, "moving: ", len(text))
-					cursor.pos++
+					cursor.Pos++
 				}
 			case 'D':
-				if cursor.pos > 0 {
-					cursor.pos--
+				if cursor.Pos > 0 {
+					cursor.Pos--
 				}
 			}
 			continue
@@ -108,9 +114,19 @@ func main() {
 		if b[0] == 3 {
 			break
 		}
-		text = slices.Insert(text, cursor.pos, b[0]) // make sure insert normal char, rn 0x10 is inserted too
+		if b[0] <= 0x1f || b[0] == 0x7f {
+			switch b[0] {
+			case 0x0d:
+				return
+			case 0x7f:
+				text = slices.Delete(text, cursor.Pos-1, cursor.Pos)
+				cursor.Pos--
+			}
+			continue
+		}
+		text = slices.Insert(text, cursor.Pos, b[0]) // make sure insert normal char, rn 0x0a is inserted too
 		fmt.Fprintln(logFile, "adding: ", len(text))
-		cursor.pos++
+		cursor.Pos++
 	}
 	// for {
 	// 	prompt := "*a │"
