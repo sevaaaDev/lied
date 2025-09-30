@@ -10,11 +10,20 @@ import (
 	"unicode"
 )
 
+type Mode int
+
+const (
+	M_APPEND Mode = iota
+	M_PREPEND
+	M_CHANGE
+)
+
 type Context struct {
 	Buffer      [][]byte
 	CurrentLine int
 	Commands    map[string]Command
 	Filename    string
+	Mode        Mode
 }
 
 type Command struct {
@@ -25,6 +34,7 @@ type Command struct {
 
 func NewContext() *Context {
 	return &Context{
+		Mode:        M_APPEND,
 		Buffer:      [][]byte{},
 		CurrentLine: 0,
 		Commands: map[string]Command{

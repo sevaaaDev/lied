@@ -2,15 +2,15 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"lied/context"
 	"slices"
+	"strings"
 
-	// "lied/lexer"
-	// "lied/parser"
+	"lied/lexer"
+	"lied/parser"
 	"os"
-	// "slices"
-	// "strings"
 
 	"golang.org/x/term"
 )
@@ -29,29 +29,122 @@ func readFile(filename string) ([][]byte, error) {
 	return buf, nil
 }
 
-func readline(scanner *bufio.Scanner, prompt string) []byte {
-	var line []byte
-	fmt.Print(prompt)
-	for scanner.Scan() {
-		if scanner.Bytes()[0] == '\n' {
-			break
-		}
-		line = append(line, scanner.Bytes()...)
-	}
-	return line
-}
-
 type Cursor struct {
 	Pos int
 }
+
 type Buffer struct {
-	value []byte
-	Cursor
+	value     []byte
+	CursorPos int
+}
+
+func (b *Buffer) CursorLeft() {
+	if b.CursorPos > 0 {
+		b.CursorPos--
+	}
+}
+func (b *Buffer) CursorRight() {
+	if b.CursorPos < len(b.value) {
+		b.CursorPos++
+	}
+}
+
+func (b *Buffer) Insert(v ...byte) {
+	b.value = slices.Insert(b.value, b.CursorPos, v...)
+	b.CursorRight()
+}
+
+func (b *Buffer) Delete(i int, j int) {
+	b.value = slices.Delete(b.value, i, j)
+}
+
+func (b *Buffer) Backspace() {
+	if b.CursorPos > 0 {
+		b.Delete(b.CursorPos-1, b.CursorPos)
+		b.CursorLeft()
+	}
+}
+
+func (b *Buffer) Value() string {
+	return strings.ReplaceAll(string(b.value), "\t", "        ")
+}
+func (b *Buffer) Set(buf []byte) {
+	b.value = buf
+	b.CursorPos = len(buf)
+}
+
+func (b *Buffer) Len() int {
+	return len(b.value)
+}
+
+func (b *Buffer) print(prompt string) {
+	print("\033[2K") // clear current line
+	print("\033[0G")
+	print(prompt)
+	line := b.Value() // TODO: Handle tab char
+	print(line)
+	print("\033[", len(line)+1+4, "G")
+}
+
+var ctrlC = fmt.Errorf("Pressed ^C")
+
+func (b *Buffer) Readline(prompt string) error {
+	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
+	if err != nil {
+		return err
+	}
+	defer fmt.Print("\n")
+	defer term.Restore(int(os.Stdin.Fd()), oldState)
+	for {
+		b.print(prompt)
+		chars := make([]byte, 3)
+		_, err := os.Stdin.Read(chars)
+		if err != nil {
+			return err
+		}
+		if chars[0] == 3 { // ^C
+			return ctrlC
+		}
+		if chars[0] == 27 && chars[1] == '[' { // ESC SEQ
+			switch chars[2] {
+			case 'C':
+				b.CursorRight()
+			case 'D':
+				b.CursorLeft()
+			}
+			continue
+		}
+		if chars[0] <= 0x1f || chars[0] == 0x7f { // CTRL
+			switch chars[0] {
+			case 0x0d: // CR
+				fmt.Printf("\033[%dG", b.Len()+1)
+				return nil
+			case 0x7f:
+				b.Backspace()
+			case 0x09:
+				b.Insert('\t')
+			}
+			continue
+		}
+		b.Insert(chars[0])
+	}
+
+}
+
+func NewReadBuffer(value []byte) *Buffer {
+	return &Buffer{
+		value:     value,
+		CursorPos: len(value),
+	}
 }
 
 // TODO: make method for delete, insert and stuff for buffer and cursor
 
 func main() {
+	retcode := 0
+	defer func() {
+		os.Exit(retcode)
+	}()
 	ctx := context.NewContext()
 	if len(os.Args) > 1 {
 		buf, err := readFile(os.Args[1])
@@ -63,70 +156,49 @@ func main() {
 		ctx.Filename = os.Args[1]
 	}
 	ctx.CurrentLine = len(ctx.Buffer)
-	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Split(bufio.ScanBytes)
-	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
-	if err != nil {
-		fmt.Println("failed setting raw mode")
-		os.Exit(1)
-	}
-	defer term.Restore(int(os.Stdin.Fd()), oldState)
-	text := make([]byte, 0, 50)
-	text = append(text, []byte("hello world")...)
-	cursor := Cursor{
-		Pos: len(text),
-	}
-	bigB := make([]byte, 0, 10)
-	logFile, err := os.OpenFile("log.txt", os.O_APPEND|os.O_WRONLY, 0644)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(2)
-	}
-	defer logFile.Close()
-	for len(bigB) < 10 {
-		fmt.Print("\033[0E")
-		fmt.Print("\033[2K") // clear current line
-		fmt.Print(string(text))
-		fmt.Print("\033[0E") // move to start of line
-		if cursor.Pos > 0 {
-			fmt.Printf("\033[%dC", cursor.Pos)
+	readBuffer := NewReadBuffer([]byte("hello world"))
+	for {
+		readBuffer.Set([]byte{})
+		if ctx.Mode == context.M_CHANGE {
+			readBuffer.Set(ctx.Buffer[ctx.CurrentLine-1])
 		}
-		b := make([]byte, 3)
-		_, err = os.Stdin.Read(b)
+		err := readBuffer.Readline("*a │")
 		if err != nil {
-			fmt.Println("failed reading")
-			os.Exit(2)
-		}
-		if b[0] == 27 && b[1] == '[' {
-			switch b[2] {
-			case 'C':
-				if cursor.Pos < len(text) {
-					fmt.Fprintln(logFile, "moving: ", len(text))
-					cursor.Pos++
-				}
-			case 'D':
-				if cursor.Pos > 0 {
-					cursor.Pos--
-				}
-			}
-			continue
-		}
-		if b[0] == 3 {
-			break
-		}
-		if b[0] <= 0x1f || b[0] == 0x7f {
-			switch b[0] {
-			case 0x0d:
+			switch errors.Is(err, ctrlC) {
+			case true:
+				retcode = 130
 				return
-			case 0x7f:
-				text = slices.Delete(text, cursor.Pos-1, cursor.Pos)
-				cursor.Pos--
+			case false:
+				fmt.Println(err)
+			}
+		}
+		line := []byte(readBuffer.Value())
+		if ctx.Mode == context.M_CHANGE {
+			ctx.Buffer[ctx.CurrentLine-1] = line
+			continue
+		}
+		if len(line) == 0 || line[0] != ':' {
+			if ctx.Mode == context.M_APPEND {
+				ctx.Buffer = slices.Insert(ctx.Buffer, ctx.CurrentLine, line)
+				ctx.CurrentLine++
 			}
 			continue
 		}
-		text = slices.Insert(text, cursor.Pos, b[0]) // make sure insert normal char, rn 0x0a is inserted too
-		fmt.Fprintln(logFile, "adding: ", len(text))
-		cursor.Pos++
+		tokens, err := lexer.Tokenize(line[1:])
+		if err != nil {
+			fmt.Println("Lexer:", err)
+			continue
+		}
+		node, err := parser.Parse(tokens)
+		if err != nil {
+			fmt.Println("Parser:", err)
+			continue
+		}
+		err = node.Eval(ctx)
+		if err != nil {
+			fmt.Println("Exec:", err)
+			continue
+		}
 	}
 	// for {
 	// 	prompt := "*a │"
