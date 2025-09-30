@@ -4,10 +4,15 @@ import (
 	"bufio"
 	"fmt"
 	"lied/context"
-	"lied/lexer"
-	"lied/parser"
-	"os"
 	"slices"
+
+	// "lied/lexer"
+	// "lied/parser"
+	"os"
+	// "slices"
+	// "strings"
+
+	"golang.org/x/term"
 )
 
 func readFile(filename string) ([][]byte, error) {
@@ -36,6 +41,10 @@ func readline(scanner *bufio.Scanner, prompt string) []byte {
 	return line
 }
 
+type Cursor struct {
+	pos int
+}
+
 func main() {
 	ctx := context.NewContext()
 	if len(os.Args) > 1 {
@@ -50,28 +59,81 @@ func main() {
 	ctx.CurrentLine = len(ctx.Buffer)
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Split(bufio.ScanBytes)
-	for {
-		prompt := "*a │"
-		line := readline(scanner, prompt)
-		if len(line) == 0 || line[0] != ':' {
-			ctx.Buffer = slices.Insert(ctx.Buffer, ctx.CurrentLine, line)
-			ctx.CurrentLine++
-			continue
-		}
-		tokens, err := lexer.Tokenize(line[1:])
-		if err != nil {
-			fmt.Println("Lexer:", err)
-			continue
-		}
-		node, err := parser.Parse(tokens)
-		if err != nil {
-			fmt.Println("Parser:", err)
-			continue
-		}
-		err = node.Eval(ctx)
-		if err != nil {
-			fmt.Println("Exec:", err)
-			continue
-		}
+	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
+	if err != nil {
+		fmt.Println("failed setting raw mode")
+		os.Exit(1)
 	}
+	defer term.Restore(int(os.Stdin.Fd()), oldState)
+	text := make([]byte, 0, 50)
+	text = append(text, []byte("hello world")...)
+	cursor := Cursor{
+		pos: len(text),
+	}
+	bigB := make([]byte, 0, 10)
+	logFile, err := os.OpenFile("log.txt", os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(2)
+	}
+	defer logFile.Close()
+	for len(bigB) < 10 {
+		fmt.Print("\033[0E")
+		fmt.Print("\033[2K") // clear current line
+		fmt.Print(string(text))
+		fmt.Print("\033[0E") // move to start of line
+		if cursor.pos > 0 {
+			fmt.Printf("\033[%dC", cursor.pos)
+		}
+		b := make([]byte, 3)
+		_, err = os.Stdin.Read(b)
+		if err != nil {
+			fmt.Println("failed reading")
+			os.Exit(2)
+		}
+		if b[0] == 27 && b[1] == '[' {
+			switch b[2] {
+			case 'C':
+				if cursor.pos < len(text) {
+					fmt.Fprintln(logFile, "moving: ", len(text))
+					cursor.pos++
+				}
+			case 'D':
+				if cursor.pos > 0 {
+					cursor.pos--
+				}
+			}
+			continue
+		}
+		if b[0] == 3 {
+			break
+		}
+		text = slices.Insert(text, cursor.pos, b[0]) // make sure insert normal char, rn 0x10 is inserted too
+		fmt.Fprintln(logFile, "adding: ", len(text))
+		cursor.pos++
+	}
+	// for {
+	// 	prompt := "*a │"
+	// 	line := readline(scanner, prompt)
+	// 	if len(line) == 0 || line[0] != ':' {
+	// 		ctx.Buffer = slices.Insert(ctx.Buffer, ctx.CurrentLine, line)
+	// 		ctx.CurrentLine++
+	// 		continue
+	// 	}
+	// 	tokens, err := lexer.Tokenize(line[1:])
+	// 	if err != nil {
+	// 		fmt.Println("Lexer:", err)
+	// 		continue
+	// 	}
+	// 	node, err := parser.Parse(tokens)
+	// 	if err != nil {
+	// 		fmt.Println("Parser:", err)
+	// 		continue
+	// 	}
+	// 	err = node.Eval(ctx)
+	// 	if err != nil {
+	// 		fmt.Println("Exec:", err)
+	// 		continue
+	// 	}
+	// }
 }
