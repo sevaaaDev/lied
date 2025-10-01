@@ -66,7 +66,7 @@ func (rl *rl) SetPrompt(p string) {
 
 func (rl *rl) Readline() error {
 	rl.buf.b = make([]byte, 0)
-	rl.cursorPos = 0 // we spent 30 min debug this, turns out we forgot reset pos. maybe this is why storing states is dangerous
+	rl.cursorPos = 0 // we spent 30 min debugging this, turns out we forgot to reset pos. maybe this is why storing states is dangerous
 	oldstate, err := enableRawMode()
 	if err != nil {
 		return err

@@ -26,13 +26,7 @@ func readFile(filename string) ([][]byte, error) {
 	return buf, nil
 }
 
-// TODO: make method for delete, insert and stuff for buffer and cursor
-
 func main() {
-	retcode := 0
-	defer func() {
-		os.Exit(retcode)
-	}()
 	ctx := context.NewContext()
 	if len(os.Args) > 1 {
 		buf, err := readFile(os.Args[1])
@@ -50,7 +44,6 @@ func main() {
 	for {
 		err := rl.Readline()
 		if err != nil {
-			fmt.Println("shit")
 			return
 		}
 		line := rl.Buffer()
