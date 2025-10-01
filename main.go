@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"os"
 	"slices"
-	"strings"
 
 	"lied/context"
 	"lied/lexer"
 	"lied/parser"
-
-	"golang.org/x/term"
+	"lied/readline"
 )
 
 func readFile(filename string) ([][]byte, error) {
@@ -46,11 +44,16 @@ func main() {
 		ctx.Filename = os.Args[1]
 	}
 	ctx.CurrentLine = len(ctx.Buffer)
-	readBuffer := NewReadBuffer(nil)
+	rl := readline.New()
+	prompt := "*a │"
+	rl.SetPrompt(prompt)
 	for {
-		prompt := "*a │"
-		_ = readBuffer.Readline(prompt)
-		line := []byte(readBuffer.Value())
+		err := rl.Readline()
+		if err != nil {
+			fmt.Println("shit")
+			return
+		}
+		line := rl.Buffer()
 		if len(line) == 0 || line[0] != ':' {
 			if ctx.Mode == context.M_APPEND {
 				ctx.Buffer = slices.Insert(ctx.Buffer, ctx.CurrentLine, line)
