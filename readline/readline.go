@@ -62,13 +62,13 @@ func (rl *rl) SetPrompt(p string) {
 
 func (rl *rl) readChar() bool {
 	rl.refreshLine()
-	seq := make([]byte, 3)
+	seq := make([]byte, 4)
 	n, err := os.Stdin.Read(seq)
 	if err != nil {
 		return false
 	}
 	if n == 1 {
-		if seq[0] > 0x1f && seq[0] != 0x7f {
+		if seq[0] >= 0x20 && seq[0] < 0x7f {
 			rl.insert(seq[0])
 			return true
 		}
