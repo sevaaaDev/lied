@@ -2,8 +2,8 @@ package parser
 
 import (
 	"fmt"
-	"lied/context"
-	"lied/lexer"
+	"github.com/sevaaadev/lied/context"
+	"github.com/sevaaadev/lied/lexer"
 	"strconv"
 )
 

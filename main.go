@@ -6,10 +6,10 @@ import (
 	"os"
 	"slices"
 
-	"lied/context"
-	"lied/lexer"
-	"lied/parser"
-	"lied/readline"
+	"github.com/sevaaadev/lied/context"
+	"github.com/sevaaadev/lied/lexer"
+	"github.com/sevaaadev/lied/parser"
+	"github.com/sevaaadev/lied/readline"
 )
 
 func readFile(filename string) ([][]byte, error) {
