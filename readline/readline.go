@@ -56,59 +56,64 @@ func (rl *rl) cursorRight() {
 	}
 }
 
-func (rl *rl) Buffer() []byte {
-	return rl.buf.b
-}
-
 func (rl *rl) SetPrompt(p string) {
 	rl.prompt = p
 }
 
-func (rl *rl) Readline() error {
+func (rl *rl) readChar() bool {
+	rl.refreshLine()
+	seq := make([]byte, 3)
+	n, err := os.Stdin.Read(seq)
+	if err != nil {
+		return false
+	}
+	if n == 1 {
+		if seq[0] > 0x1f && seq[0] != 0x7f {
+			rl.insert(seq[0])
+			return true
+		}
+		switch seq[0] {
+		case 0x0a:
+			rl.refreshLine()
+			return false
+		case 0x7f:
+			fallthrough
+		case 0x08:
+			rl.backspace()
+		case 0x09:
+			rl.insert('\t')
+		}
+	} else {
+		// handle esc seq
+		if seq[0] == 27 && seq[1] == '[' { // ESC SEQ
+			switch seq[2] {
+			case 'C':
+				rl.cursorRight()
+			case 'D':
+				rl.cursorLeft()
+			}
+		}
+	}
+	return true
+}
+
+func (rl *rl) Readline() ([]byte, error) {
 	rl.buf.b = make([]byte, 0)
-	rl.cursorPos = 0 // we spent 30 min debugging this, turns out we forgot to reset pos. maybe this is why storing states is dangerous
+	rl.cursorPos = len(rl.buf.b)
+
 	oldstate, err := enableRawMode()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer print("\n")
 	defer disableRawMode(oldstate)
-	for {
-		rl.refreshLine()
-		seq := make([]byte, 3)
-		n, err := os.Stdin.Read(seq)
-		if err != nil {
-			return err
-		}
-		if n == 1 {
-			// handle 1 char
-			if seq[0] <= 0x1f || seq[0] == 0x7f { // CTRL
-				switch seq[0] {
-				case 0x0a:
-					rl.refreshLine()
-					return nil
-				case 0x7f:
-					fallthrough
-				case 0x08:
-					rl.backspace()
-				case 0x09:
-					rl.insert('\t')
-				}
-				continue
-			}
-			rl.insert(seq[0])
-		} else {
-			// handle esc seq
-			if seq[0] == 27 && seq[1] == '[' { // ESC SEQ
-				switch seq[2] {
-				case 'C':
-					rl.cursorRight()
-				case 'D':
-					rl.cursorLeft()
-				}
-			}
-		}
+
+	for rl.readChar() {
 	}
+
+	res := make([]byte, len(rl.buf.b))
+	copy(res, rl.buf.b) // dunno if this is necessary
+	return res, nil
 }
 
 // Readline instances
