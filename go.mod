@@ -1,4 +1,4 @@
-module lied
+module github.com/sevaaadev/lied
 
 go 1.25.1
 
