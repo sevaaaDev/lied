@@ -48,13 +48,31 @@ type rl struct {
 	prompt    string
 }
 
+func tab2space(tabLen int) string {
+	b := []byte{}
+	for range tabLen {
+		b = append(b, ' ')
+	}
+	return string(b)
+}
+
 func (rl *rl) refreshLine() {
+	cursorPos := rl.cursorPos
 	cmd := []byte{}
 	cmd = append(cmd, '\r')
 	cmd = append(cmd, []byte(rl.prompt)...)
-	cmd = append(cmd, rl.buf.b...)
+	for i, c := range rl.buf.b {
+		if c != '\t' {
+			cmd = append(cmd, byte(c))
+			continue
+		}
+		cmd = append(cmd, []byte(tab2space(4))...)
+		if i < rl.cursorPos {
+			cursorPos += 3 // minus 1 than tab len, bcs rl.cursorPos is already ahead by 1
+		}
+	}
 	cmd = append(cmd, []byte("\x1b[0K")...)
-	cmd = fmt.Appendf(cmd, "\r\x1b[%dC", rl.cursorPos-1+len(rl.prompt)-1)
+	cmd = fmt.Appendf(cmd, "\r\x1b[%dC", cursorPos-1+len(rl.prompt)-1)
 	fmt.Print(string(cmd))
 }
 func (rl *rl) insert(v ...byte) {
