@@ -6,6 +6,28 @@ import (
 	"slices"
 )
 
+const (
+	KEY_NULL  = 0   /* NULL */
+	CTRL_A    = 1   /* Ctrl+a */
+	CTRL_B    = 2   /* Ctrl-b */
+	CTRL_C    = 3   /* Ctrl-c */
+	CTRL_D    = 4   /* Ctrl-d */
+	CTRL_E    = 5   /* Ctrl-e */
+	CTRL_F    = 6   /* Ctrl-f */
+	CTRL_H    = 8   /* Ctrl-h */
+	TAB       = 9   /* Tab */
+	CTRL_K    = 11  /* Ctrl+k */
+	CTRL_L    = 12  /* Ctrl+l */
+	ENTER     = 10  /* Enter */
+	CTRL_N    = 14  /* Ctrl-n */
+	CTRL_P    = 16  /* Ctrl-p */
+	CTRL_T    = 20  /* Ctrl-t */
+	CTRL_U    = 21  /* Ctrl+u */
+	CTRL_W    = 23  /* Ctrl+w */
+	ESC       = 27  /* Escape */
+	BACKSPACE = 127 /* Backspace */
+)
+
 type buffer struct {
 	b []byte
 }
@@ -63,29 +85,31 @@ func (rl *rl) SetPrompt(p string) {
 func (rl *rl) readChar() bool {
 	rl.refreshLine()
 	seq := make([]byte, 4)
-	n, err := os.Stdin.Read(seq)
+	_, err := os.Stdin.Read(seq)
 	if err != nil {
 		return false
 	}
-	if n == 1 {
-		if seq[0] >= 0x20 && seq[0] < 0x7f {
-			rl.insert(seq[0])
-			return true
-		}
-		switch seq[0] {
-		case 0x0a:
-			rl.refreshLine()
-			return false
-		case 0x7f:
-			fallthrough
-		case 0x08:
-			rl.backspace()
-		case 0x09:
-			rl.insert('\t')
-		}
-	} else {
-		// handle esc seq
-		if seq[0] == 27 && seq[1] == '[' { // ESC SEQ
+	if seq[0] >= 0x20 && seq[0] < 0x7f {
+		rl.insert(seq[0])
+		return true
+	}
+	switch seq[0] {
+	case ENTER:
+		return false
+	case BACKSPACE, 8:
+		rl.backspace()
+	case TAB:
+		rl.insert('\t')
+	case ESC:
+		if seq[1] == '[' {
+			if seq[2] >= '0' && seq[2] <= '9' && seq[3] == '~' {
+				switch seq[2] {
+				case '1': // HOME key
+					rl.cursorPos = 0
+				case '4': // END key
+					rl.cursorPos = len(rl.buf.b)
+				}
+			}
 			switch seq[2] {
 			case 'C':
 				rl.cursorRight()
@@ -110,6 +134,7 @@ func (rl *rl) Readline() ([]byte, error) {
 
 	for rl.readChar() {
 	}
+	defer rl.refreshLine()
 
 	res := make([]byte, len(rl.buf.b))
 	copy(res, rl.buf.b) // dunno if this is necessary
