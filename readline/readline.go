@@ -133,6 +133,10 @@ func (rl *rl) readChar() bool {
 				rl.cursorRight()
 			case 'D':
 				rl.cursorLeft()
+			case 'H':
+				rl.cursorPos = 0
+			case 'F':
+				rl.cursorPos = len(rl.buf.b)
 			}
 		}
 	}
