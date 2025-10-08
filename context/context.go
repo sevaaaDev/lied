@@ -68,6 +68,11 @@ func NewContext() *Context {
 				Desc: "print buffer",
 				Run:  cmdTransfer,
 			},
+			"c": {
+				Name: "mode change",
+				Desc: "go to mode change",
+				Run:  cmdModeChange,
+			},
 			"": {
 				Name: "set",
 				Desc: "print buffer",
@@ -239,5 +244,13 @@ func cmdTransfer(ctx *Context, lineRange *[2]int, args []string) error {
 	// }
 
 	ctx.Buffer = slices.Insert(ctx.Buffer, target-1, ctx.Buffer[lineRange[0]-1:lineRange[1]]...)
+	return nil
+}
+func cmdModeChange(ctx *Context, lineRange *[2]int, args []string) error {
+	err := cmdSet(ctx, lineRange, args)
+	if err != nil {
+		return err
+	}
+	ctx.Mode = M_CHANGE
 	return nil
 }
