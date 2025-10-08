@@ -43,6 +43,11 @@ func main() {
 	prompt := "*a │"
 	rl.SetPrompt(prompt)
 	for {
+		if ctx.Mode == context.M_CHANGE {
+			rl.SetBuffer(ctx.Buffer[ctx.CurrentLine-1])
+			prompt := "*c │"
+			rl.SetPrompt(prompt)
+		}
 		line, err := rl.Readline()
 		if err != nil {
 			fmt.Println(err)
@@ -52,6 +57,12 @@ func main() {
 			if ctx.Mode == context.M_APPEND {
 				ctx.Buffer = slices.Insert(ctx.Buffer, ctx.CurrentLine, line)
 				ctx.CurrentLine++
+			}
+			if ctx.Mode == context.M_CHANGE {
+				ctx.Buffer = slices.Replace(ctx.Buffer, ctx.CurrentLine-1, ctx.CurrentLine, line)
+				ctx.Mode = context.M_APPEND
+				prompt := "*a │"
+				rl.SetPrompt(prompt)
 			}
 			continue
 		}

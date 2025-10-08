@@ -247,6 +247,9 @@ func cmdTransfer(ctx *Context, lineRange *[2]int, args []string) error {
 	return nil
 }
 func cmdModeChange(ctx *Context, lineRange *[2]int, args []string) error {
+	if lineRange == nil {
+		lineRange = &[2]int{ctx.CurrentLine, ctx.CurrentLine}
+	}
 	err := cmdSet(ctx, lineRange, args)
 	if err != nil {
 		return err

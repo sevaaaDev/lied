@@ -85,6 +85,7 @@ func (rl *rl) backspace() {
 		rl.cursorPos--
 	}
 }
+
 func (rl *rl) cursorLeft() {
 	if rl.cursorPos > 0 {
 		rl.cursorPos--
@@ -143,10 +144,13 @@ func (rl *rl) readChar() bool {
 	return true
 }
 
-func (rl *rl) Readline() ([]byte, error) {
-	rl.buf.b = make([]byte, 0)
+func (rl *rl) SetBuffer(newBuffer []byte) {
+	rl.buf.b = make([]byte, len(newBuffer))
+	copy(rl.buf.b, newBuffer)
 	rl.cursorPos = len(rl.buf.b)
+}
 
+func (rl *rl) Readline() ([]byte, error) {
 	oldstate, err := enableRawMode()
 	if err != nil {
 		return nil, err
@@ -156,10 +160,14 @@ func (rl *rl) Readline() ([]byte, error) {
 
 	for rl.readChar() {
 	}
-	defer rl.refreshLine()
 
 	res := make([]byte, len(rl.buf.b))
 	copy(res, rl.buf.b) // dunno if this is necessary
+
+	rl.refreshLine()
+
+	rl.buf.b = make([]byte, 0)
+	rl.cursorPos = len(rl.buf.b)
 	return res, nil
 }
 
